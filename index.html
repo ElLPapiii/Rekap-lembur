@@ -61,10 +61,11 @@
                     <h1 class="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                         <i class="fa-solid fa-clock"></i> Rekap lembur
                     </h1>
-                                   <div class="flex items-center gap-3">
+                </div>
+                <div class="flex items-center gap-3">
                     <div id="cloudStatus" class="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-xs flex items-center gap-2">
                         <i class="fa-solid fa-cloud-arrow-up text-emerald-300"></i>
-                        <span>Reconected...</span>
+                        <span>Reconnected...</span>
                     </div>
                     <button onclick="openRateModal()" class="bg-white text-brand-700 hover:bg-brand-50 px-3.5 py-2 rounded-xl text-xs font-semibold shadow transition duration-200 flex items-center gap-1.5">
                         <i class="fa-solid fa-table-list"></i> Tabel Rate Lembur
@@ -93,7 +94,7 @@
                 <p class="text-xs text-slate-400 mt-2"><span id="cardTotalMasuk">0</span>h In - <span id="cardTotalKeluar">0</span>h Out</p>
             </div>
 
-            <!-- Card 2: Total Lembur Dibayar (Filtered) -->
+            <!-- Card 2: Total Lembur Dibayar -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
@@ -104,9 +105,9 @@
                         <i class="fa-solid fa-business-time"></i>
                     </div>
                 </div>
-                          </div>
+            </div>
 
-            <!-- Card 3: Total Upah Lembur (Filtered) -->
+            <!-- Card 3: Total Upah Lembur -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
@@ -117,7 +118,7 @@
                         <i class="fa-solid fa-wallet"></i>
                     </div>
                 </div>
-                            </div>
+            </div>
 
             <!-- Card 4: Jumlah Catatan -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
@@ -130,12 +131,11 @@
                         <i class="fa-solid fa-file-invoice"></i>
                     </div>
                 </div>
-               
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- LEFT COLUMN: Form Input (no-print) -->
+            <!-- LEFT COLUMN: Form Input -->
             <div class="lg:col-span-1 no-print">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 sticky top-6">
                     <h2 class="text-lg font-bold text-slate-800 border-b pb-3 mb-4 flex items-center justify-between">
@@ -146,16 +146,54 @@
                     <form id="lemburForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
                         <input type="hidden" id="editId" value="">
 
-                        <!-- Tanggal -->
+                        <!-- Tanggal & Tag Hari Libur -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Lembur *</label>
-                            <input type="date" id="inputTanggal" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                            <input type="date" id="inputTanggal" onchange="onTanggalChange()" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                        </div>
+
+                        <!-- Checkbox Tanggal Merah / Libur -->
+                        <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                            <span id="dayStatusBadge" class="text-xs font-semibold text-slate-600">
+                                <i class="fa-regular fa-calendar-days text-brand-600 mr-1"></i> Hari Kerja
+                            </span>
+                            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-red-600">
+                                <input type="checkbox" id="isTanggalMerah" onchange="calculateTimeDifference()" class="w-4 h-4 text-red-600 rounded border-slate-300 focus:ring-red-500">
+                                Tanggal Merah / Libur
+                            </label>
+                        </div>
+
+                        <!-- JAM MULAI & SELESAI -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                            <span class="block text-xs font-bold text-slate-700"><i class="fa-regular fa-clock text-brand-600 mr-1"></i> Jam Kerja Lembur</span>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-500 mb-1">Jam Mulai</label>
+                                    <input type="time" id="inputJamMulai" onchange="calculateTimeDifference()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 text-xs font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-500 mb-1">Jam Selesai</label>
+                                    <input type="time" id="inputJamSelesai" onchange="calculateTimeDifference()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 text-xs font-semibold">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-medium text-slate-500 mb-1">Potongan Istirahat (Otomatis per 4 Jam)</label>
+                                <select id="inputIstirahat" onchange="calculateTimeDifference()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-brand-500 font-semibold text-slate-700">
+                                    <option value="0">0 Jam (Tanpa Istirahat)</option>
+                                    <option value="0.5">0.5 Jam (30 Menit - Otomatis ≥ 4 Jam)</option>
+                                    <option value="1">1.0 Jam (Otomatis ≥ 8 Jam)</option>
+                                    <option value="1.5">1.5 Jam</option>
+                                    <option value="2">2.0 Jam</option>
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Input Jam Lembur Real -->
                         <div class="bg-brand-50/50 p-3.5 rounded-xl border border-brand-100 space-y-2">
                             <label class="block text-xs font-semibold text-brand-700">
-                                Total Lembur
+                                Total Lembur Bersih (Jam)
                             </label>
                             <input type="number" step="0.5" min="0" id="inputJamLembur" placeholder="0" oninput="calculateRealtimeBreakdown()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-bold text-slate-800">
                             
@@ -178,7 +216,7 @@
                                 Tabungan Out
                             </label>
                             <input type="number" step="0.5" min="0" id="inputTabunganKeluar" placeholder="0" oninput="calculateRealtimeBreakdown()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-bold text-slate-800">
-                                                    </div>
+                        </div>
 
                         <!-- Summary Hasil Realtime Perhitungan Form -->
                         <div class="pt-2 border-t border-slate-100 space-y-1">
@@ -203,7 +241,7 @@
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
                     
-                    <!-- Header Table & Filter Controls (no-print) -->
+                    <!-- Header Table & Filter Controls -->
                     <div class="p-5 border-b border-slate-100 space-y-4 no-print">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -222,7 +260,7 @@
                         <!-- Filter Controls -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Filter</label>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Filter Bulan</label>
                                 <input type="month" id="filterMonth" onchange="renderData()" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
                             </div>
                             <div class="flex items-end">
@@ -245,12 +283,13 @@
                             <thead>
                                 <tr class="bg-slate-50/80 text-slate-600 uppercase text-[11px] tracking-wider font-semibold border-b border-slate-200">
                                     <th class="py-3.5 px-4">Tanggal</th>
+                                    <th class="py-3.5 px-4 text-center">Jam Kerja</th>
                                     <th class="py-3.5 px-4 text-center">Total Lembur</th>
                                     <th class="py-3.5 px-4 text-center">Lembur/Hari</th>
                                     <th class="py-3.5 px-4 text-center">Tabungan (+ / -)</th>
                                     <th class="py-3.5 px-4 text-center">Total Jam</th>
                                     <th class="py-3.5 px-4 text-right">Estimasi</th>
-                                    <th class="py-3.5 px-4 text-center no-print">Keterangan</th>
+                                    <th class="py-3.5 px-4 text-center no-print">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="lemburTableBody" class="divide-y divide-slate-100 text-sm">
@@ -326,12 +365,10 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Variables
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'rekap-lembur-app';
         
-        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyCRuOyEe9m53zS7W4POcPu-c5chSWA42Ok",
             authDomain: "rekap-lembur-app.firebaseapp.com",
@@ -341,7 +378,6 @@
             appId: "1:995610299591:web:56e5200ee9f1e3137102e2"
         };
 
-        // Standard Rate Table Defaults according to user's image
         const DEFAULT_RATES = {
             1: 21785,
             1.5: 36308,
@@ -363,14 +399,12 @@
         let auth = null;
         let currentUser = null;
 
-        // Initialize Firebase
         async function initFirebase() {
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
-                // Auth sequence
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -395,8 +429,9 @@
 
         function updateCloudStatus(online, customMsg) {
             const el = document.getElementById('cloudStatus');
+            if (!el) return;
             if (online) {
-                el.innerHTML = `<i class="fa-solid fa-cloud text-emerald-300"></i><span>Conected</span>`;
+                el.innerHTML = `<i class="fa-solid fa-cloud text-emerald-300"></i><span>Connected</span>`;
                 el.className = "bg-emerald-500/20 text-emerald-100 backdrop-blur-md px-3 py-1.5 rounded-xl border border-emerald-400/30 text-xs flex items-center gap-2";
             } else {
                 el.innerHTML = `<i class="fa-solid fa-cloud-slash text-amber-300"></i><span>${customMsg || 'Offline'}</span>`;
@@ -404,26 +439,20 @@
             }
         }
 
-        // Realtime Firestore Listener
         function subscribeFirestoreData() {
             if (!currentUser || !db) return;
 
-            // Public Collection path requirement
             const dataColl = collection(db, 'artifacts', appId, 'public', 'data', 'rekap_lembur');
             const rateDoc = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'rates');
 
-            // Listen to Rates
             onSnapshot(rateDoc, (docSnap) => {
                 if (docSnap.exists()) {
                     tieredRates = docSnap.data().rates || { ...DEFAULT_RATES };
                 }
                 renderRateModalInputs();
                 if (typeof window.renderData === 'function') window.renderData();
-            }, (error) => {
-                console.error("Rates error:", error);
-            });
+            }, (error) => console.error("Rates error:", error));
 
-            // Listen to Rekap Lembur Data
             onSnapshot(dataColl, (querySnap) => {
                 const items = [];
                 querySnap.forEach((doc) => {
@@ -431,12 +460,9 @@
                 });
                 window.lemburList = items;
                 if (typeof window.renderData === 'function') window.renderData();
-            }, (error) => {
-                console.error("Data fetch error:", error);
-            });
+            }, (error) => console.error("Data fetch error:", error));
         }
 
-        // Save Item to Cloud / Local
         window.saveItemToCloud = async function(item) {
             if (currentUser && db) {
                 try {
@@ -453,7 +479,6 @@
             }
         };
 
-        // Delete Item from Cloud / Local
         window.deleteItemFromCloud = async function(id) {
             if (currentUser && db) {
                 try {
@@ -469,7 +494,6 @@
             }
         };
 
-        // Save Rates to Cloud / Local
         window.saveRatesToCloud = async function(newRates) {
             tieredRates = newRates;
             if (currentUser && db) {
@@ -502,12 +526,10 @@
             if (typeof window.renderData === 'function') window.renderData();
         }
 
-        // Helper calculation from tiered lookup
         window.calculateTieredWage = function(hours) {
             if (hours <= 0) return 0;
             if (tieredRates[hours]) return tieredRates[hours];
 
-            // Linear interpolation/extrapolation for non-exact hours
             const keys = Object.keys(tieredRates).map(Number).sort((a,b)=>a-b);
             if (hours < keys[0]) return (tieredRates[keys[0]] / keys[0]) * hours;
             if (hours > keys[keys.length-1]) {
@@ -516,7 +538,6 @@
                 return tieredRates[maxKey] + (hours - maxKey) * ratePerHour;
             }
 
-            // Find closest lower and upper keys
             let lower = keys[0];
             let upper = keys[keys.length-1];
             for (let i = 0; i < keys.length; i++) {
@@ -561,7 +582,6 @@
             renderRateModalInputs();
         };
 
-        // Initialize App & Firebase on window load
         window.onload = function() {
             document.getElementById('inputTanggal').valueAsDate = new Date();
             const yearMonth = new Date().toISOString().slice(0, 7);
@@ -571,27 +591,104 @@
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
             });
 
-            calculateRealtimeBreakdown();
+            onTanggalChange();
             initFirebase();
         };
     </script>
 
     <!-- Global Interface & Logic Scripts -->
     <script>
+        // FUNGSI CEK HARI SABTU/MINGGU DARI TANGGAL
+        function isWeekend(dateString) {
+            if (!dateString) return false;
+            const date = new Date(dateString);
+            const day = date.getDay(); // 0 = Minggu, 6 = Sabtu
+            return day === 0 || day === 6;
+        }
+
+        // EVENT EVENT KETIKA TANGGAL DIUBAH
+        function onTanggalChange() {
+            const dateVal = document.getElementById('inputTanggal').value;
+            const checkboxRed = document.getElementById('isTanggalMerah');
+            const badge = document.getElementById('dayStatusBadge');
+
+            const weekend = isWeekend(dateVal);
+
+            if (weekend) {
+                checkboxRed.checked = true;
+                badge.innerHTML = `<i class="fa-solid fa-mug-hot text-red-500 mr-1"></i> Hari Libur (Akhir Pekan)`;
+                badge.className = "text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded";
+            } else {
+                checkboxRed.checked = false;
+                badge.innerHTML = `<i class="fa-regular fa-calendar-days text-brand-600 mr-1"></i> Hari Kerja`;
+                badge.className = "text-xs font-semibold text-slate-600";
+            }
+
+            calculateTimeDifference();
+        }
+
+        // FUNGSI HITUNG SELISIH JAM & POTONGAN ISTIRAHAT OTOMATIS PER 4 JAM
+        function calculateTimeDifference() {
+            const jamMulai = document.getElementById('inputJamMulai').value;
+            const jamSelesai = document.getElementById('inputJamSelesai').value;
+            const selectIstirahat = document.getElementById('inputIstirahat');
+
+            if (!jamMulai || !jamSelesai) {
+                calculateRealtimeBreakdown();
+                return;
+            }
+
+            const [startHour, startMin] = jamMulai.split(':').map(Number);
+            const [endHour, endMin] = jamSelesai.split(':').map(Number);
+
+            let startMinutes = startHour * 60 + startMin;
+            let endMinutes = endHour * 60 + endMin;
+
+            // Lintas hari (melewati tengah malam)
+            if (endMinutes <= startMinutes) {
+                endMinutes += 24 * 60;
+            }
+
+            let diffMinutes = endMinutes - startMinutes;
+            let rawHours = diffMinutes / 60;
+
+            // OTOMATIS HITUNG POTONGAN ISTIRAHAT PER 4 JAM
+            let autoIstirahat = Math.floor(rawHours / 4) * 0.5;
+            selectIstirahat.value = autoIstirahat.toString();
+
+            let totalHours = rawHours - autoIstirahat;
+            if (totalHours < 0) totalHours = 0;
+
+            document.getElementById('inputJamLembur').value = Math.round(totalHours * 10) / 10;
+            calculateRealtimeBreakdown();
+        }
+
         // Calculate Form Realtime Breakdown
         function calculateRealtimeBreakdown() {
             const jamInput = parseFloat(document.getElementById('inputJamLembur').value) || 0;
             const tabKeluar = parseFloat(document.getElementById('inputTabunganKeluar').value) || 0;
+            const tanggalVal = document.getElementById('inputTanggal').value;
+            const isTanggalMerahChecked = document.getElementById('isTanggalMerah').checked;
+
+            const isHoliday = isWeekend(tanggalVal) || isTanggalMerahChecked;
 
             let lemburHarian = 0;
             let tabunganMasuk = 0;
 
-            if (jamInput > 4) {
-                lemburHarian = 4;
-                tabunganMasuk = jamInput - 4;
-            } else {
+            // ATURAN MAKSIMAL LEMBUR:
+            // Jika Hari Libur / Tanggal Merah -> TIDAK ADA MAKSIMAL (seluruh jam dibayar)
+            // Jika Hari Kerja -> Maksimal 4 Jam per hari, sisanya ke Tabungan
+            if (isHoliday) {
                 lemburHarian = jamInput;
                 tabunganMasuk = 0;
+            } else {
+                if (jamInput > 4) {
+                    lemburHarian = 4;
+                    tabunganMasuk = jamInput - 4;
+                } else {
+                    lemburHarian = jamInput;
+                    tabunganMasuk = 0;
+                }
             }
 
             const totalDibayar = lemburHarian + tabKeluar;
@@ -602,7 +699,7 @@
             document.getElementById('previewTotalDibayar').innerText = `${totalDibayar} Jam`;
             document.getElementById('previewEstimasiUpah').innerText = formatRupiah(estimasiUpah);
 
-            return { lemburHarian, tabunganMasuk, tabKeluar, totalDibayar, estimasiUpah };
+            return { lemburHarian, tabunganMasuk, tabKeluar, totalDibayar, estimasiUpah, isHoliday };
         }
 
         function handleFormSubmit(e) {
@@ -610,8 +707,12 @@
 
             const editId = document.getElementById('editId').value;
             const tanggal = document.getElementById('inputTanggal').value;
+            const jamMulai = document.getElementById('inputJamMulai').value;
+            const jamSelesai = document.getElementById('inputJamSelesai').value;
+            const istirahat = parseFloat(document.getElementById('inputIstirahat').value) || 0;
             const jamLemburReal = parseFloat(document.getElementById('inputJamLembur').value) || 0;
             const tabKeluar = parseFloat(document.getElementById('inputTabunganKeluar').value) || 0;
+            const isTanggalMerah = document.getElementById('isTanggalMerah').checked;
 
             if (jamLemburReal <= 0 && tabKeluar <= 0) {
                 alert('Mohon isi jam lembur atau pencairan tabungan lembur!');
@@ -623,15 +724,19 @@
             const itemData = {
                 id: editId || Date.now().toString(),
                 tanggal,
+                jamMulai,
+                jamSelesai,
+                istirahat,
                 jamLemburReal,
                 lemburHarian,
                 tabunganMasuk,
                 tabKeluar,
-                totalDibayar
+                totalDibayar,
+                isTanggalMerah
             };
 
             window.saveItemToCloud(itemData);
-            showToast(editId ? 'Data lembur berhasil diperbarui!' : 'Data tersimpan ke Cloud!');
+            showToast(editId ? 'Data lembur berhasil diperbarui!' : 'Data tersimpan!');
             resetForm();
         }
 
@@ -642,6 +747,10 @@
 
             document.getElementById('editId').value = item.id;
             document.getElementById('inputTanggal').value = item.tanggal;
+            document.getElementById('isTanggalMerah').checked = !!item.isTanggalMerah;
+            document.getElementById('inputJamMulai').value = item.jamMulai || '';
+            document.getElementById('inputJamSelesai').value = item.jamSelesai || '';
+            document.getElementById('inputIstirahat').value = item.istirahat || 0;
             document.getElementById('inputJamLembur').value = item.jamLemburReal;
             document.getElementById('inputTabunganKeluar').value = item.tabKeluar;
 
@@ -656,7 +765,7 @@
         }
 
         function deleteItem(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus data ini dari cloud?')) {
+            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
                 window.deleteItemFromCloud(id);
                 showToast('Data telah dihapus.');
             }
@@ -670,10 +779,10 @@
             document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-circle-plus text-brand-600"></i> Form Input Lembur';
             document.getElementById('submitBtn').classList.remove('bg-amber-600', 'hover:bg-amber-700');
             document.getElementById('submitBtn').classList.add('bg-brand-600', 'hover:bg-brand-700');
-            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Simpan ke Cloud';
+            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Simpan';
             document.getElementById('cancelEditBtn').classList.add('hidden');
 
-            calculateRealtimeBreakdown();
+            onTanggalChange();
         }
 
         window.renderData = function() {
@@ -685,7 +794,6 @@
             const filterMonth = document.getElementById('filterMonth').value;
             const dataList = window.lemburList || [];
 
-            // Global Savings Calculation
             let totalTabunganMasukAll = 0;
             let totalTabunganKeluarAll = 0;
 
@@ -700,7 +808,6 @@
             document.getElementById('cardTotalMasuk').innerText = totalTabunganMasukAll;
             document.getElementById('cardTotalKeluar').innerText = totalTabunganKeluarAll;
 
-            // Filter data
             let filteredList = [...dataList].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 
             if (filterMonth) {
@@ -720,11 +827,20 @@
                     sumTotalDibayar += item.totalDibayar;
                     sumTotalUpah += upahItem;
 
+                    const holidayBadge = (isWeekend(item.tanggal) || item.isTanggalMerah) 
+                        ? '<span class="ml-1 px-1.5 py-0.5 text-[10px] bg-red-100 text-red-700 rounded font-bold">Libur</span>' 
+                        : '';
+
+                    const timeRangeStr = (item.jamMulai && item.jamSelesai) 
+                        ? `<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">${item.jamMulai} - ${item.jamSelesai}</span>` 
+                        : '<span class="text-slate-300">-</span>';
+
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50/80 transition text-slate-700';
 
                     tr.innerHTML = `
-                        <td class="py-3.5 px-4 font-medium whitespace-nowrap">${formatTanggal(item.tanggal)}</td>
+                        <td class="py-3.5 px-4 font-medium whitespace-nowrap">${formatTanggal(item.tanggal)} ${holidayBadge}</td>
+                        <td class="py-3.5 px-4 text-center whitespace-nowrap">${timeRangeStr}</td>
                         <td class="py-3.5 px-4 text-center font-medium">${item.jamLemburReal || 0}h</td>
                         <td class="py-3.5 px-4 text-center font-medium">${item.lemburHarian || 0}h</td>
                         <td class="py-3.5 px-4 text-center whitespace-nowrap">
@@ -765,12 +881,17 @@
             }
 
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Tanggal,Jam Lembur Input,Lembur Harian (Max 4h),Tabungan Masuk,Tabungan Keluar,Total Jam Dibayar,Total Upah (Rp)\n";
+            csvContent += "Tanggal,Hari Libur,Jam Mulai,Jam Selesai,Istirahat (Jam),Jam Lembur Input,Lembur Harian,Tabungan Masuk,Tabungan Keluar,Total Jam Dibayar,Total Upah (Rp)\n";
 
             dataList.forEach(item => {
+                const isHoliday = isWeekend(item.tanggal) || item.isTanggalMerah;
                 const upah = window.calculateTieredWage ? window.calculateTieredWage(item.totalDibayar) : 0;
                 const row = [
                     `"${item.tanggal}"`,
+                    isHoliday ? "Ya" : "Tidak",
+                    `"${item.jamMulai || '-'}"`,
+                    `"${item.jamSelesai || '-'}"`,
+                    item.istirahat || 0,
                     item.jamLemburReal || 0,
                     item.lemburHarian || 0,
                     item.tabunganMasuk || 0,
@@ -798,7 +919,6 @@
             document.getElementById('rateModal').classList.add('hidden');
         }
 
-        // Handle Excel Upload for Overtime Rates
         function handleExcelRateUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -820,14 +940,12 @@
                     const newRates = {};
                     let countAdded = 0;
 
-                    // Parse rows (ignoring headers if text)
-                    json.forEach((row, idx) => {
+                    json.forEach((row) => {
                         if (!row || row.length < 2) return;
                         
                         let jam = parseFloat(row[0]);
                         let rateRaw = row[1];
 
-                        // Convert cleaned string rate to number if string contains 'Rp' or separators
                         if (typeof rateRaw === 'string') {
                             rateRaw = rateRaw.replace(/[^0-9.]/g, '');
                         }
@@ -840,18 +958,17 @@
                     });
 
                     if (countAdded === 0) {
-                        alert('Format Excel tidak sesuai! Pastikan Kolom 1 = Jam (misal: 1, 1.5, 2) dan Kolom 2 = Upah/Rate (misal: 21785).');
+                        alert('Format Excel tidak sesuai! Pastikan Kolom 1 = Jam dan Kolom 2 = Upah/Rate.');
                         return;
                     }
 
-                    // Apply parsed rates and render into modal
                     window.saveRatesToCloud(newRates);
-                    showToast(`${countAdded} rate jam berhasil diimport dari Excel!`);
+                    showToast(`${countAdded} rate jam berhasil diimport!`);
                 } catch (err) {
                     console.error("Gagal membaca Excel:", err);
-                    alert("Gagal membaca file Excel. Pastikan format file .xlsx, .xls, atau .csv.");
+                    alert("Gagal membaca file Excel.");
                 } finally {
-                    e.target.value = ''; // Reset input
+                    e.target.value = '';
                 }
             };
             reader.readAsArrayBuffer(file);
