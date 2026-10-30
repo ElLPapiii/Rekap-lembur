@@ -6,6 +6,8 @@
     <title>Aplikasi Rekap Lembur & Tabungan Jam</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS CDN for Excel Upload/Parse -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Inter -->
@@ -57,15 +59,12 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-clock"></i> Rekap Lembur & Tabungan Jam
+                        <i class="fa-solid fa-clock"></i> Rekap lembur
                     </h1>
-                    <p class="text-brand-100 text-sm mt-1">Tersimpan otomatis di Cloud. Akses kapan saja & di mana saja.</p>
-                </div>
-                
-                <div class="flex items-center gap-3">
+                                   <div class="flex items-center gap-3">
                     <div id="cloudStatus" class="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-xs flex items-center gap-2">
                         <i class="fa-solid fa-cloud-arrow-up text-emerald-300"></i>
-                        <span>Menghubungkan Cloud...</span>
+                        <span>Reconected...</span>
                     </div>
                     <button onclick="openRateModal()" class="bg-white text-brand-700 hover:bg-brand-50 px-3.5 py-2 rounded-xl text-xs font-semibold shadow transition duration-200 flex items-center gap-1.5">
                         <i class="fa-solid fa-table-list"></i> Tabel Rate Lembur
@@ -84,56 +83,54 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Saldo Tabungan Lembur</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tabungan Lembur</p>
                         <h3 id="cardSaldoTabungan" class="text-2xl font-extrabold text-emerald-600 mt-1">0 Jam</h3>
                     </div>
                     <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 text-xl">
                         <i class="fa-solid fa-piggy-bank"></i>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-2"><span id="cardTotalMasuk">0</span>h masuk - <span id="cardTotalKeluar">0</span>h dicairkan</p>
+                <p class="text-xs text-slate-400 mt-2"><span id="cardTotalMasuk">0</span>h In - <span id="cardTotalKeluar">0</span>h Out</p>
             </div>
 
             <!-- Card 2: Total Lembur Dibayar (Filtered) -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Jam Dibayar</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Jam</p>
                         <h3 id="cardTotalJamDibayar" class="text-2xl font-extrabold text-brand-600 mt-1">0 Jam</h3>
                     </div>
                     <div class="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 text-xl">
                         <i class="fa-solid fa-business-time"></i>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-2">Harian (max 4h) + Tabungan Cair</p>
-            </div>
+                          </div>
 
             <!-- Card 3: Total Upah Lembur (Filtered) -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Nominal Upah</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Nominal</p>
                         <h3 id="cardTotalUpah" class="text-2xl font-extrabold text-indigo-600 mt-1">Rp 0</h3>
                     </div>
                     <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 text-xl">
                         <i class="fa-solid fa-wallet"></i>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-2">Dihitung dari Tabel Rate Per Jam</p>
-            </div>
+                            </div>
 
             <!-- Card 4: Jumlah Catatan -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Entri Data</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Input Lembur</p>
                         <h3 id="cardTotalEntri" class="text-2xl font-extrabold text-purple-600 mt-1">0</h3>
                     </div>
                     <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 text-xl">
                         <i class="fa-solid fa-file-invoice"></i>
                     </div>
                 </div>
-                <p class="text-xs text-slate-400 mt-2">Sesuai filter bulan saat ini</p>
+               
             </div>
         </div>
 
@@ -158,18 +155,18 @@
                         <!-- Input Jam Lembur Real -->
                         <div class="bg-brand-50/50 p-3.5 rounded-xl border border-brand-100 space-y-2">
                             <label class="block text-xs font-semibold text-brand-700">
-                                Jam Lembur Hari Ini (Jam)
+                                Total Lembur
                             </label>
                             <input type="number" step="0.5" min="0" id="inputJamLembur" placeholder="0" oninput="calculateRealtimeBreakdown()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-bold text-slate-800">
                             
                             <!-- Breakdown Otomatis Info -->
                             <div class="text-xs text-slate-600 space-y-1.5 bg-white p-2.5 rounded-lg border border-slate-200">
                                 <div class="flex justify-between">
-                                    <span>Lembur Harian (Maks 4 Jam):</span>
+                                    <span>Lembur Harian :</span>
                                     <span id="previewLemburHarian" class="font-bold text-slate-800">0 Jam</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span>Masuk Tabungan Lembur:</span>
+                                    <span>Tabungan In :</span>
                                     <span id="previewTabunganMasuk" class="font-bold text-emerald-600">0 Jam</span>
                                 </div>
                             </div>
@@ -178,26 +175,25 @@
                         <!-- Input Tabungan Keluar (Cair) -->
                         <div class="bg-amber-50/50 p-3.5 rounded-xl border border-amber-100 space-y-2">
                             <label class="block text-xs font-semibold text-amber-800">
-                                Pencairan Tabungan Lembur (Jam)
+                                Tabungan Out
                             </label>
                             <input type="number" step="0.5" min="0" id="inputTabunganKeluar" placeholder="0" oninput="calculateRealtimeBreakdown()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-bold text-slate-800">
-                            <p class="text-[11px] text-amber-700">Diambil dari tabungan untuk dibayarkan bersama lembur hari ini.</p>
-                        </div>
+                                                    </div>
 
                         <!-- Summary Hasil Realtime Perhitungan Form -->
                         <div class="pt-2 border-t border-slate-100 space-y-1">
                             <div class="flex justify-between text-xs text-slate-500">
-                                <span>Total Jam Dibayar:</span>
+                                <span>Total Jam :</span>
                                 <span id="previewTotalDibayar" class="font-bold text-slate-800">0 Jam</span>
                             </div>
                             <div class="flex justify-between text-sm text-slate-800 font-bold">
-                                <span>Estimasi Upah:</span>
+                                <span>Estimasi :</span>
                                 <span id="previewEstimasiUpah" class="text-brand-600">Rp 0</span>
                             </div>
                         </div>
 
                         <button type="submit" id="submitBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow transition duration-200 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Simpan ke Cloud
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Simpan
                         </button>
                     </form>
                 </div>
@@ -211,7 +207,7 @@
                     <div class="p-5 border-b border-slate-100 space-y-4 no-print">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                <i class="fa-solid fa-list-check text-brand-600"></i> Riwayat & Rekap Lembur
+                                <i class="fa-solid fa-list-check text-brand-600"></i> Rekap Lembur
                             </h2>
                             <div class="flex items-center gap-2">
                                 <button onclick="exportToCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
@@ -226,7 +222,7 @@
                         <!-- Filter Controls -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Filter Bulan & Tahun</label>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Filter</label>
                                 <input type="month" id="filterMonth" onchange="renderData()" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
                             </div>
                             <div class="flex items-end">
@@ -239,7 +235,7 @@
 
                     <!-- Print Title Only -->
                     <div class="hidden print-only p-4 border-b">
-                        <h2 class="text-xl font-bold">Laporan Rekapitulasi Lembur Karyawan</h2>
+                        <h2 class="text-xl font-bold">Rekap Lembur</h2>
                         <p class="text-xs text-slate-500">Dicetak pada: <span id="printDate"></span></p>
                     </div>
 
@@ -249,12 +245,12 @@
                             <thead>
                                 <tr class="bg-slate-50/80 text-slate-600 uppercase text-[11px] tracking-wider font-semibold border-b border-slate-200">
                                     <th class="py-3.5 px-4">Tanggal</th>
-                                    <th class="py-3.5 px-4 text-center">Jam Lembur Input</th>
-                                    <th class="py-3.5 px-4 text-center">Harian (Max 4h)</th>
+                                    <th class="py-3.5 px-4 text-center">Total Lembur</th>
+                                    <th class="py-3.5 px-4 text-center">Lembur/Hari</th>
                                     <th class="py-3.5 px-4 text-center">Tabungan (+ / -)</th>
-                                    <th class="py-3.5 px-4 text-center">Total Jam Dibayar</th>
-                                    <th class="py-3.5 px-4 text-right">Upah (Rp)</th>
-                                    <th class="py-3.5 px-4 text-center no-print">Aksi</th>
+                                    <th class="py-3.5 px-4 text-center">Total Jam</th>
+                                    <th class="py-3.5 px-4 text-right">Estimasi</th>
+                                    <th class="py-3.5 px-4 text-center no-print">Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody id="lemburTableBody" class="divide-y divide-slate-100 text-sm">
@@ -280,8 +276,22 @@
                 <h3 class="text-lg font-bold text-slate-800">Tabel Rates Lembur Per Jam</h3>
                 <button onclick="closeRateModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-xs text-slate-500 mb-3">Nilai default telah disesuaikan dengan skema berjenjang resmi. Anda dapat mengubah nilai nominal sesuai ketentuan perusahaan.</p>
+            <p class="text-xs text-slate-500 mb-3">Nilai default telah disesuaikan dengan skema berjenjang resmi. Anda dapat mengubah nilai nominal secara manual atau unggah file Excel/CSV.</p>
             
+            <!-- Excel Upload Box -->
+            <div class="mb-3 p-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl flex items-center justify-between gap-3">
+                <div class="text-xs text-slate-600">
+                    <p class="font-semibold text-slate-700 mb-0.5"><i class="fa-solid fa-file-excel text-emerald-600"></i> Import Rate dari Excel/CSV</p>
+                    <p class="text-[11px] text-slate-400">Kolom: <b>Jam</b> dan <b>Rate / Upah</b></p>
+                </div>
+                <div>
+                    <input type="file" id="excelRateInput" accept=".xlsx, .xls, .csv" onchange="handleExcelRateUpload(event)" class="hidden">
+                    <button onclick="document.getElementById('excelRateInput').click()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow transition flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-file-import"></i> Pilih File
+                    </button>
+                </div>
+            </div>
+
             <div class="overflow-y-auto flex-1 pr-1">
                 <table class="w-full text-xs">
                     <thead>
@@ -386,7 +396,7 @@
         function updateCloudStatus(online, customMsg) {
             const el = document.getElementById('cloudStatus');
             if (online) {
-                el.innerHTML = `<i class="fa-solid fa-cloud text-emerald-300"></i><span>Terhubung Cloud</span>`;
+                el.innerHTML = `<i class="fa-solid fa-cloud text-emerald-300"></i><span>Conected</span>`;
                 el.className = "bg-emerald-500/20 text-emerald-100 backdrop-blur-md px-3 py-1.5 rounded-xl border border-emerald-400/30 text-xs flex items-center gap-2";
             } else {
                 el.innerHTML = `<i class="fa-solid fa-cloud-slash text-amber-300"></i><span>${customMsg || 'Offline'}</span>`;
@@ -786,6 +796,65 @@
 
         function closeRateModal() {
             document.getElementById('rateModal').classList.add('hidden');
+        }
+
+        // Handle Excel Upload for Overtime Rates
+        function handleExcelRateUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (json.length === 0) {
+                        alert('File Excel kosong!');
+                        return;
+                    }
+
+                    const newRates = {};
+                    let countAdded = 0;
+
+                    // Parse rows (ignoring headers if text)
+                    json.forEach((row, idx) => {
+                        if (!row || row.length < 2) return;
+                        
+                        let jam = parseFloat(row[0]);
+                        let rateRaw = row[1];
+
+                        // Convert cleaned string rate to number if string contains 'Rp' or separators
+                        if (typeof rateRaw === 'string') {
+                            rateRaw = rateRaw.replace(/[^0-9.]/g, '');
+                        }
+                        let rate = parseFloat(rateRaw);
+
+                        if (!isNaN(jam) && !isNaN(rate) && jam > 0) {
+                            newRates[jam] = rate;
+                            countAdded++;
+                        }
+                    });
+
+                    if (countAdded === 0) {
+                        alert('Format Excel tidak sesuai! Pastikan Kolom 1 = Jam (misal: 1, 1.5, 2) dan Kolom 2 = Upah/Rate (misal: 21785).');
+                        return;
+                    }
+
+                    // Apply parsed rates and render into modal
+                    window.saveRatesToCloud(newRates);
+                    showToast(`${countAdded} rate jam berhasil diimport dari Excel!`);
+                } catch (err) {
+                    console.error("Gagal membaca Excel:", err);
+                    alert("Gagal membaca file Excel. Pastikan format file .xlsx, .xls, atau .csv.");
+                } finally {
+                    e.target.value = ''; // Reset input
+                }
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         function saveRateSetting() {
