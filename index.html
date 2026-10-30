@@ -98,7 +98,7 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Jam</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Jam (Periode)</p>
                         <h3 id="cardTotalJamDibayar" class="text-2xl font-extrabold text-brand-600 mt-1">0 Jam</h3>
                     </div>
                     <div class="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 text-xl">
@@ -111,7 +111,7 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Nominal</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Nominal (Periode)</p>
                         <h3 id="cardTotalUpah" class="text-2xl font-extrabold text-indigo-600 mt-1">Rp 0</h3>
                     </div>
                     <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 text-xl">
@@ -124,7 +124,7 @@
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Input Lembur</p>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Input (Periode)</p>
                         <h3 id="cardTotalEntri" class="text-2xl font-extrabold text-purple-600 mt-1">0</h3>
                     </div>
                     <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 text-xl">
@@ -179,11 +179,11 @@
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-medium text-slate-500 mb-1">Potongan Istirahat (Otomatis per 4 Jam)</label>
+                                <label class="block text-[11px] font-medium text-slate-500 mb-1">Potongan Istirahat (Otomatis jika > 4 Jam)</label>
                                 <select id="inputIstirahat" onchange="calculateTimeDifference()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-brand-500 font-semibold text-slate-700">
-                                    <option value="0">0 Jam (Tanpa Istirahat)</option>
-                                    <option value="0.5">0.5 Jam (30 Menit - Otomatis ≥ 4 Jam)</option>
-                                    <option value="1">1.0 Jam (Otomatis ≥ 8 Jam)</option>
+                                    <option value="0">0 Jam (Tanpa Istirahat / ≤ 4 Jam)</option>
+                                    <option value="0.5">0.5 Jam (30 Menit - Otomatis > 4 Jam)</option>
+                                    <option value="1">1.0 Jam (Otomatis > 8 Jam)</option>
                                     <option value="1.5">1.5 Jam</option>
                                     <option value="2">2.0 Jam</option>
                                 </select>
@@ -257,15 +257,16 @@
                             </div>
                         </div>
 
-                        <!-- Filter Controls -->
+                        <!-- Filter Controls (Periode 21-20) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Filter Bulan</label>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Filter Periode Gaji (21 s.d. 20)</label>
                                 <input type="month" id="filterMonth" onchange="renderData()" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                <p id="activePeriodInfo" class="text-[10px] text-brand-600 font-semibold mt-1"></p>
                             </div>
                             <div class="flex items-end">
                                 <button onclick="resetFilters()" class="w-full bg-white hover:bg-slate-100 border border-slate-300 text-slate-600 py-1.5 rounded-lg text-xs font-medium transition">
-                                    Tampilkan Semua Bulan
+                                    Tampilkan Semua Periode
                                 </button>
                             </div>
                         </div>
@@ -274,7 +275,7 @@
                     <!-- Print Title Only -->
                     <div class="hidden print-only p-4 border-b">
                         <h2 class="text-xl font-bold">Rekap Lembur</h2>
-                        <p class="text-xs text-slate-500">Dicetak pada: <span id="printDate"></span></p>
+                        <p class="text-xs text-slate-500">Periode: <span id="printPeriodText"></span> | Dicetak pada: <span id="printDate"></span></p>
                     </div>
 
                     <!-- Table List -->
@@ -301,7 +302,7 @@
                     <!-- Empty State -->
                     <div id="emptyState" class="hidden p-8 text-center text-slate-400">
                         <i class="fa-regular fa-folder-open text-4xl mb-2"></i>
-                        <p class="text-sm">Belum ada data rekap lembur.</p>
+                        <p class="text-sm">Belum ada data rekap lembur pada periode ini.</p>
                     </div>
                 </div>
             </div>
@@ -584,8 +585,19 @@
 
         window.onload = function() {
             document.getElementById('inputTanggal').valueAsDate = new Date();
-            const yearMonth = new Date().toISOString().slice(0, 7);
-            document.getElementById('filterMonth').value = yearMonth;
+            
+            const today = new Date();
+            let targetYear = today.getFullYear();
+            let targetMonth = today.getMonth() + 1;
+            if (today.getDate() > 20) {
+                targetMonth += 1;
+                if (targetMonth > 12) {
+                    targetMonth = 1;
+                    targetYear += 1;
+                }
+            }
+            const defaultFilterStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
+            document.getElementById('filterMonth').value = defaultFilterStr;
 
             document.getElementById('printDate').innerText = new Date().toLocaleDateString('id-ID', {
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -598,15 +610,50 @@
 
     <!-- Global Interface & Logic Scripts -->
     <script>
-        // FUNGSI CEK HARI SABTU/MINGGU DARI TANGGAL
+        const MONTH_NAMES = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        function getPeriodRange(yearMonthStr) {
+            if (!yearMonthStr) return null;
+            const [y, m] = yearMonthStr.split('-').map(Number);
+            
+            let prevM = m - 1;
+            let prevY = y;
+            if (prevM === 0) {
+                prevM = 12;
+                prevY = y - 1;
+            }
+
+            const startDate = new Date(prevY, prevM - 1, 21);
+            const endDate = new Date(y, m - 1, 20);
+
+            return {
+                startDate,
+                endDate,
+                textStr: `21 ${MONTH_NAMES[prevM]} ${prevY} - 20 ${MONTH_NAMES[m]} ${y}`
+            };
+        }
+
+        function isDateInPeriod(dateString, yearMonthStr) {
+            if (!yearMonthStr) return true;
+            const itemDate = new Date(dateString);
+            itemDate.setHours(0, 0, 0, 0);
+
+            const range = getPeriodRange(yearMonthStr);
+            if (!range) return true;
+
+            range.startDate.setHours(0, 0, 0, 0);
+            range.endDate.setHours(0, 0, 0, 0);
+
+            return itemDate >= range.startDate && itemDate <= range.endDate;
+        }
+
         function isWeekend(dateString) {
             if (!dateString) return false;
             const date = new Date(dateString);
-            const day = date.getDay(); // 0 = Minggu, 6 = Sabtu
+            const day = date.getDay();
             return day === 0 || day === 6;
         }
 
-        // EVENT EVENT KETIKA TANGGAL DIUBAH
         function onTanggalChange() {
             const dateVal = document.getElementById('inputTanggal').value;
             const checkboxRed = document.getElementById('isTanggalMerah');
@@ -627,7 +674,9 @@
             calculateTimeDifference();
         }
 
-        // FUNGSI HITUNG SELISIH JAM & POTONGAN ISTIRAHAT OTOMATIS PER 4 JAM
+        // PERHITUNGAN POTONGAN ISTIRAHAT:
+        // Potongan dihitung HANYA JIKA durasi lembur > 4 jam (setiap kelipatan di atas 4 jam dipotong 0.5 jam)
+        // Contoh: 4 jam = 0 jam potongan (bersih 4 jam), 5 jam = 0.5 jam potongan (bersih 4.5 jam)
         function calculateTimeDifference() {
             const jamMulai = document.getElementById('inputJamMulai').value;
             const jamSelesai = document.getElementById('inputJamSelesai').value;
@@ -644,7 +693,6 @@
             let startMinutes = startHour * 60 + startMin;
             let endMinutes = endHour * 60 + endMin;
 
-            // Lintas hari (melewati tengah malam)
             if (endMinutes <= startMinutes) {
                 endMinutes += 24 * 60;
             }
@@ -652,8 +700,13 @@
             let diffMinutes = endMinutes - startMinutes;
             let rawHours = diffMinutes / 60;
 
-            // OTOMATIS HITUNG POTONGAN ISTIRAHAT PER 4 JAM
-            let autoIstirahat = Math.floor(rawHours / 4) * 0.5;
+            // Potongan istirahat dihitung setelah melebihi 4 jam
+            let autoIstirahat = 0;
+            if (rawHours > 4) {
+                autoIstirahat = Math.floor((rawHours - 0.1) / 4) * 0.5;
+                if (autoIstirahat === 0) autoIstirahat = 0.5; // Minimal 0.5 jam jika > 4 jam
+            }
+
             selectIstirahat.value = autoIstirahat.toString();
 
             let totalHours = rawHours - autoIstirahat;
@@ -663,7 +716,6 @@
             calculateRealtimeBreakdown();
         }
 
-        // Calculate Form Realtime Breakdown
         function calculateRealtimeBreakdown() {
             const jamInput = parseFloat(document.getElementById('inputJamLembur').value) || 0;
             const tabKeluar = parseFloat(document.getElementById('inputTabunganKeluar').value) || 0;
@@ -675,9 +727,6 @@
             let lemburHarian = 0;
             let tabunganMasuk = 0;
 
-            // ATURAN MAKSIMAL LEMBUR:
-            // Jika Hari Libur / Tanggal Merah -> TIDAK ADA MAKSIMAL (seluruh jam dibayar)
-            // Jika Hari Kerja -> Maksimal 4 Jam per hari, sisanya ke Tabungan
             if (isHoliday) {
                 lemburHarian = jamInput;
                 tabunganMasuk = 0;
@@ -794,6 +843,18 @@
             const filterMonth = document.getElementById('filterMonth').value;
             const dataList = window.lemburList || [];
 
+            const periodRange = getPeriodRange(filterMonth);
+            const periodTextEl = document.getElementById('activePeriodInfo');
+            const printPeriodTextEl = document.getElementById('printPeriodText');
+            
+            if (filterMonth && periodRange) {
+                periodTextEl.innerText = `Periode Aktif: ${periodRange.textStr}`;
+                if (printPeriodTextEl) printPeriodTextEl.innerText = periodRange.textStr;
+            } else {
+                periodTextEl.innerText = `Menampilkan Semua Periode`;
+                if (printPeriodTextEl) printPeriodTextEl.innerText = "Semua Periode";
+            }
+
             let totalTabunganMasukAll = 0;
             let totalTabunganKeluarAll = 0;
 
@@ -811,7 +872,7 @@
             let filteredList = [...dataList].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 
             if (filterMonth) {
-                filteredList = filteredList.filter(item => item.tanggal.startsWith(filterMonth));
+                filteredList = filteredList.filter(item => isDateInPeriod(item.tanggal, filterMonth));
             }
 
             let sumTotalDibayar = 0;
@@ -905,7 +966,7 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Rekap_Lembur_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute("download", `Rekap_Lembur_Periode_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
