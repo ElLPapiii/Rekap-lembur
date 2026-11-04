@@ -179,11 +179,11 @@
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-medium text-slate-500 mb-1">Potongan Istirahat (Otomatis jika > 4 Jam)</label>
+                                <label class="block text-[11px] font-medium text-slate-500 mb-1">Potongan Istirahat (Otomatis per 4 Jam / 3.5 Jam)</label>
                                 <select id="inputIstirahat" onchange="calculateTimeDifference()" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-brand-500 font-semibold text-slate-700">
-                                    <option value="0">0 Jam (Tanpa Istirahat / ≤ 4 Jam)</option>
-                                    <option value="0.5">0.5 Jam (30 Menit - Otomatis > 4 Jam)</option>
-                                    <option value="1">1.0 Jam (Otomatis > 8 Jam)</option>
+                                    <option value="0">0 Jam (Tanpa Istirahat)</option>
+                                    <option value="0.5">0.5 Jam (30 Menit)</option>
+                                    <option value="1">1.0 Jam</option>
                                     <option value="1.5">1.5 Jam</option>
                                     <option value="2">2.0 Jam</option>
                                 </select>
@@ -675,8 +675,8 @@
         }
 
         // PERHITUNGAN POTONGAN ISTIRAHAT:
-        // Potongan dihitung HANYA JIKA durasi lembur > 4 jam (setiap kelipatan di atas 4 jam dipotong 0.5 jam)
-        // Contoh: 4 jam = 0 jam potongan (bersih 4 jam), 5 jam = 0.5 jam potongan (bersih 4.5 jam)
+        // Potongan 0.5 jam per blok: tiap 4 jam (lembur bersih <= 5.5 jam) atau tiap 3.5 jam (lembur bersih > 5.5 jam)
+        // Contoh: 4 jam = 0 potongan, 5 jam = 0.5 potongan (bersih 4.5), 7.5 jam = 0.5 potongan (bersih 7), 8 jam = 1.0 potongan (bersih 7)
         function calculateTimeDifference() {
             const jamMulai = document.getElementById('inputJamMulai').value;
             const jamSelesai = document.getElementById('inputJamSelesai').value;
@@ -700,11 +700,20 @@
             let diffMinutes = endMinutes - startMinutes;
             let rawHours = diffMinutes / 60;
 
-            // Potongan istirahat dihitung setelah melebihi 4 jam
-            let autoIstirahat = 0;
-            if (rawHours > 4) {
-                autoIstirahat = Math.floor((rawHours - 0.1) / 4) * 0.5;
-                if (autoIstirahat === 0) autoIstirahat = 0.5; // Minimal 0.5 jam jika > 4 jam
+            // Potongan istirahat 0.5 jam per kelipatan blok jam kerja:
+            // - Lembur bersih <= 5.5 jam : setiap 4 jam istirahat 0.5 jam
+            // - Lembur bersih  > 5.5 jam : setiap 3.5 jam istirahat 0.5 jam
+            const hitungIstirahat = (jam, blok) => {
+                if (jam <= blok) return 0;
+                const r = Math.floor((jam - 0.1) / blok) * 0.5;
+                return r === 0 ? 0.5 : r; // Minimal 0.5 jam jika melewati 1 blok
+            };
+
+            let autoIstirahat = hitungIstirahat(rawHours, 4);
+            if (rawHours - autoIstirahat > 5.5) {
+                // Siklus 3.5 jam kerja + 0.5 jam istirahat = 4 jam
+                // Contoh: 7.5 jam = 3.5 kerja + 0.5 istirahat + 3.5 kerja (istirahat 0.5, bersih 7)
+                autoIstirahat = Math.floor(rawHours / 4) * 0.5;
             }
 
             selectIstirahat.value = autoIstirahat.toString();
@@ -731,9 +740,13 @@
                 lemburHarian = jamInput;
                 tabunganMasuk = 0;
             } else {
-                if (jamInput > 4) {
-                    lemburHarian = 4;
-                    tabunganMasuk = jamInput - 4;
+                // Aturan batas lembur harian:
+                // - Lembur > 5.5 jam  -> maksimal lembur harian 3.5 jam, sisanya masuk tabungan
+                // - Lembur <= 5.5 jam -> maksimal lembur harian 4 jam, sisanya masuk tabungan
+                const batasHarian = jamInput > 5.5 ? 3.5 : 4;
+                if (jamInput > batasHarian) {
+                    lemburHarian = batasHarian;
+                    tabunganMasuk = Math.round((jamInput - batasHarian) * 10) / 10;
                 } else {
                     lemburHarian = jamInput;
                     tabunganMasuk = 0;
