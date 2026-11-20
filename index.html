@@ -422,9 +422,10 @@
                     }
                 });
             } catch (err) {
-                console.warn("Firestore error fallback to local mode:", err);
-                updateCloudStatus(false, "Offline / Local Mode");
-                loadFromLocalStorage();
+                console.error("Gagal terhubung ke Firebase:", err);
+                updateCloudStatus(false, "Gagal terhubung");
+                renderRateModalInputs();
+                if (typeof window.renderData === 'function') window.renderData();
             }
         }
 
@@ -471,12 +472,10 @@
                     await setDoc(docRef, item);
                 } catch (e) {
                     console.error("Cloud save failed:", e);
+                    showToast('Gagal menyimpan ke Firebase.');
                 }
             } else {
-                window.lemburList = window.lemburList.filter(i => i.id !== item.id);
-                window.lemburList.push(item);
-                saveToLocalStorage();
-                if (typeof window.renderData === 'function') window.renderData();
+                showToast('Tidak terhubung ke Firebase. Data tidak tersimpan.');
             }
         };
 
@@ -487,11 +486,10 @@
                     await deleteDoc(docRef);
                 } catch (e) {
                     console.error("Cloud delete failed:", e);
+                    showToast('Gagal menghapus dari Firebase.');
                 }
             } else {
-                window.lemburList = window.lemburList.filter(i => i.id !== id);
-                saveToLocalStorage();
-                if (typeof window.renderData === 'function') window.renderData();
+                showToast('Tidak terhubung ke Firebase. Data tidak dihapus.');
             }
         };
 
@@ -503,29 +501,12 @@
                     await setDoc(rateDoc, { rates: newRates });
                 } catch (e) {
                     console.error("Cloud rate save failed:", e);
+                    showToast('Gagal menyimpan rate ke Firebase.');
                 }
             } else {
-                localStorage.setItem('TIERED_RATES', JSON.stringify(newRates));
-                if (typeof window.renderData === 'function') window.renderData();
+                showToast('Tidak terhubung ke Firebase. Rate tidak tersimpan.');
             }
         };
-
-        function saveToLocalStorage() {
-            localStorage.setItem('LEMBUR_LIST_LOCAL', JSON.stringify(window.lemburList || []));
-        }
-
-        function loadFromLocalStorage() {
-            const savedRates = localStorage.getItem('TIERED_RATES');
-            if (savedRates) {
-                try { tieredRates = JSON.parse(savedRates); } catch(e){}
-            }
-            const savedData = localStorage.getItem('LEMBUR_LIST_LOCAL');
-            if (savedData) {
-                try { window.lemburList = JSON.parse(savedData); } catch(e){}
-            }
-            renderRateModalInputs();
-            if (typeof window.renderData === 'function') window.renderData();
-        }
 
         window.calculateTieredWage = function(hours) {
             if (hours <= 0) return 0;
