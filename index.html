@@ -251,23 +251,26 @@
                                 <button onclick="exportToCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
                                     <i class="fa-solid fa-file-excel text-emerald-600"></i> Ekspor CSV
                                 </button>
-                                <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
-                                    <i class="fa-solid fa-print text-slate-600"></i> Cetak / PDF
+                                <button onclick="exportPeriodExcel()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-file-excel text-emerald-600"></i> Cetak / PDF (Excel)
                                 </button>
                             </div>
                         </div>
 
                         <!-- Filter Controls (Periode 21-20) -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Filter Periode Gaji (21 s.d. 20)</label>
-                                <input type="month" id="filterMonth" onchange="renderData()" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
-                                <p id="activePeriodInfo" class="text-[10px] text-brand-600 font-semibold mt-1"></p>
-                            </div>
-                            <div class="flex items-end">
-                                <button onclick="resetFilters()" class="w-full bg-white hover:bg-slate-100 border border-slate-300 text-slate-600 py-1.5 rounded-lg text-xs font-medium transition">
-                                    Tampilkan Semua Periode
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-3">
+                            <label for="filterMonth" class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                                <i class="fa-solid fa-filter text-brand-600"></i> Filter Periode Gaji (21 s.d. 20)
+                            </label>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input type="month" id="filterMonth" onchange="renderData()" class="w-full sm:flex-1 h-10 px-3 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                                <button onclick="resetFilters()" class="w-full sm:flex-1 h-10 px-3 bg-white hover:bg-slate-100 border border-slate-300 text-slate-600 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-rotate-left text-xs"></i> Tampilkan Semua Periode
                                 </button>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs font-semibold text-brand-600 bg-brand-50 border border-brand-100 rounded-lg px-3 py-2">
+                                <i class="fa-regular fa-calendar-check"></i>
+                                <span id="activePeriodInfo"></span>
                             </div>
                         </div>
                     </div>
@@ -283,6 +286,7 @@
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50/80 text-slate-600 uppercase text-[11px] tracking-wider font-semibold border-b border-slate-200">
+                                    <th class="py-3.5 px-4">Hari</th>
                                     <th class="py-3.5 px-4">Tanggal</th>
                                     <th class="py-3.5 px-4 text-center">Jam Kerja</th>
                                     <th class="py-3.5 px-4 text-center">Total Lembur</th>
@@ -644,11 +648,11 @@
 
             if (weekend) {
                 checkboxRed.checked = true;
-                badge.innerHTML = `<i class="fa-solid fa-mug-hot text-red-500 mr-1"></i> Hari Libur (Akhir Pekan)`;
+                badge.innerHTML = `<i class="fa-solid fa-mug-hot text-red-500 mr-1"></i> ${getNamaHari(dateVal)} - Hari Libur (Akhir Pekan)`;
                 badge.className = "text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded";
             } else {
                 checkboxRed.checked = false;
-                badge.innerHTML = `<i class="fa-regular fa-calendar-days text-brand-600 mr-1"></i> Hari Kerja`;
+                badge.innerHTML = `<i class="fa-regular fa-calendar-days text-brand-600 mr-1"></i> ${getNamaHari(dateVal)} - Hari Kerja`;
                 badge.className = "text-xs font-semibold text-slate-600";
             }
 
@@ -890,10 +894,13 @@
                         ? `<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">${item.jamMulai} - ${item.jamSelesai}</span>` 
                         : '<span class="text-slate-300">-</span>';
 
+                    const isLibur = isWeekend(item.tanggal) || item.isTanggalMerah;
+
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50/80 transition text-slate-700';
 
                     tr.innerHTML = `
+                        <td class="py-3.5 px-4 font-semibold whitespace-nowrap ${isLibur ? 'text-red-600' : 'text-slate-700'}">${getNamaHari(item.tanggal)}</td>
                         <td class="py-3.5 px-4 font-medium whitespace-nowrap">${formatTanggal(item.tanggal)} ${holidayBadge}</td>
                         <td class="py-3.5 px-4 text-center whitespace-nowrap">${timeRangeStr}</td>
                         <td class="py-3.5 px-4 text-center font-medium">${item.jamLemburReal || 0}h</td>
@@ -936,12 +943,13 @@
             }
 
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Tanggal,Hari Libur,Jam Mulai,Jam Selesai,Istirahat (Jam),Jam Lembur Input,Lembur Harian,Tabungan Masuk,Tabungan Keluar,Total Jam Dibayar,Total Upah (Rp)\n";
+            csvContent += "Hari,Tanggal,Hari Libur,Jam Mulai,Jam Selesai,Istirahat (Jam),Jam Lembur Input,Lembur Harian,Tabungan Masuk,Tabungan Keluar,Total Jam Dibayar,Total Upah (Rp)\n";
 
             dataList.forEach(item => {
                 const isHoliday = isWeekend(item.tanggal) || item.isTanggalMerah;
                 const upah = window.calculateTieredWage ? window.calculateTieredWage(item.totalDibayar) : 0;
                 const row = [
+                    `"${getNamaHari(item.tanggal)}"`,
                     `"${item.tanggal}"`,
                     isHoliday ? "Ya" : "Tidak",
                     `"${item.jamMulai || '-'}"`,
@@ -1058,6 +1066,96 @@
                 return `${parts[2]}/${parts[1]}/${parts[0]}`;
             }
             return dateString;
+        }
+
+        const HARI_NAMES = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+
+        // Nama hari otomatis dari tanggal (format YYYY-MM-DD), tanpa masalah zona waktu
+        function getNamaHari(dateString) {
+            if (!dateString) return '-';
+            const [y, m, d] = dateString.split('-').map(Number);
+            if (!y || !m || !d) return '-';
+            return HARI_NAMES[new Date(y, m - 1, d).getDay()];
+        }
+
+        // Kunci periode gaji (21 s.d. 20) -> "YYYY-MM" (bulan akhir periode)
+        function getPeriodKey(dateString) {
+            const [y, m, d] = dateString.split('-').map(Number);
+            let pm = m, py = y;
+            if (d > 20) {
+                pm += 1;
+                if (pm > 12) { pm = 1; py += 1; }
+            }
+            return `${py}-${String(pm).padStart(2, '0')}`;
+        }
+
+        const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+        // Ekspor Excel per periode: Hari | Tanggal | Jumlah Lembur | Lembur Harian | Tabungan | Total Lembur
+        function exportPeriodExcel() {
+            const dataList = (window.lemburList || []).filter(i => i.tanggal);
+            const filterMonth = document.getElementById('filterMonth').value;
+
+            const groups = {};
+            dataList.forEach(item => {
+                const key = getPeriodKey(item.tanggal);
+                (groups[key] = groups[key] || []).push(item);
+            });
+
+            const keys = filterMonth ? [filterMonth] : Object.keys(groups).sort();
+            if (keys.length === 0 || (filterMonth && !groups[filterMonth])) {
+                alert('Tidak ada data lembur pada periode ini untuk diekspor!');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            keys.forEach(key => {
+                const items = (groups[key] || []).sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+                const range = getPeriodRange(key);
+                const [py, pm] = key.split('-').map(Number);
+
+                const aoa = [
+                    ['REKAP LEMBUR'],
+                    [`Periode: ${range.textStr}`],
+                    [],
+                    ['Hari', 'Tanggal', 'Jumlah Lembur (Jam)', 'Lembur Harian (Jam)', 'Tabungan (Jam)', 'Total Lembur (Jam)']
+                ];
+
+                let sumJumlah = 0, sumHarian = 0, sumTabungan = 0, sumTotal = 0;
+
+                items.forEach(item => {
+                    const jumlah = round2(item.jamLemburReal);
+                    const harian = round2(item.lemburHarian);
+                    const tabungan = round2((item.tabunganMasuk || 0) - (item.tabKeluar || 0));
+                    const total = round2(item.totalDibayar);
+
+                    sumJumlah += jumlah;
+                    sumHarian += harian;
+                    sumTabungan += tabungan;
+                    sumTotal += total;
+
+                    aoa.push([getNamaHari(item.tanggal), formatTanggal(item.tanggal), jumlah, harian, tabungan, total]);
+                });
+
+                aoa.push(['TOTAL', '', round2(sumJumlah), round2(sumHarian), round2(sumTabungan), round2(sumTotal)]);
+
+                const ws = XLSX.utils.aoa_to_sheet(aoa);
+                ws['!cols'] = [{ wch: 12 }, { wch: 14 }, { wch: 20 }, { wch: 20 }, { wch: 16 }, { wch: 20 }];
+                ws['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+                    { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
+                    { s: { r: aoa.length - 1, c: 0 }, e: { r: aoa.length - 1, c: 1 } }
+                ];
+
+                XLSX.utils.book_append_sheet(wb, ws, `Periode ${MONTH_NAMES[pm].slice(0, 3)} ${py}`);
+            });
+
+            const fileName = filterMonth
+                ? `Rekap_Lembur_Periode_${filterMonth}.xlsx`
+                : 'Rekap_Lembur_Semua_Periode.xlsx';
+            XLSX.writeFile(wb, fileName);
+            showToast('File Excel berhasil dibuat!');
         }
 
         function showToast(message) {
